@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { CreateInventory } from '../dto/create-inventory.dto';
 import { InventoryService } from '../services/inventory.service';
 import { ParamsDto } from '@libs/dto/params.dto';
@@ -21,6 +30,7 @@ export class InventoryController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteInventory(@Param() params: ParamsDto) {
     return await this.service.deleteInventory(params.id);
   }

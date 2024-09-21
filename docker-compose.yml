@@ -39,9 +39,9 @@ services:
     restart: unless-stopped
     tty: true
     ports:
-      - '3307:3306'
+      - "3307:3306"
     healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 10s
       retries: 3
@@ -72,12 +72,12 @@ services:
 
   api-gateway:
     build:
-      context: ./dockerfiles
+      context: .
       dockerfile: api-gateway.dockerfile
     ports:
-      - '3000:3000'
+      - "3000:3000"
     volumes:
-      - .:/app:delegated
+      - ./src:/app:delegated
     networks:
       - nestjs
     depends_on:
@@ -88,38 +88,38 @@ services:
     environment:
       <<: [*appEnvironment]
 
-  # products:
-  #   build:
-  #     context: ./dockerfiles
-  #     dockerfile: products.dockerfile
-  #   # ports:
-  #   #   - '3000:3000'
-  #   volumes:
-  #     - .:/app:delegated
-  #   networks:
-  #     - nestjs
-  #   depends_on:
-  #     mysql:
-  #       condition: service_healthy
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   environment:
-  #     <<: [*appEnvironment]
+  products:
+    build:
+      context: .
+      dockerfile: products.dockerfile
+    # ports:
+    #   - '3000:3000'
+    volumes:
+      - ./src:/app:delegated
+    networks:
+      - nestjs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      <<: [*appEnvironment]
 
-  # inventory:
-  #   build:
-  #     context: ./dockerfiles
-  #     dockerfile: inventory.dockerfile
-  #   # ports:
-  #   #   - '3000:3000'
-  #   volumes:
-  #     - .:/app:delegated
-  #   networks:
-  #     - nestjs
-  #   depends_on:
-  #     mysql:
-  #       condition: service_healthy
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   environment:
-  #     <<: [*appEnvironment]
+  inventory:
+    build:
+      context: .
+      dockerfile: inventory.dockerfile
+    # ports:
+    #   - '3000:3000'
+    volumes:
+      - ./src:/app:delegated
+    networks:
+      - nestjs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      <<: [*appEnvironment]
