@@ -1,0 +1,125 @@
+x-app-environment: &appEnvironment
+  APP_NAME: ${APP_NAME}
+  APP_URL: ${APP_URL}
+  APP_ENV: ${APP_ENV}
+  DB_HOST: ${DB_HOST}
+  DB_PORT: ${DB_PORT}
+  DB_DATABASE: ${DB_DATABASE}
+  DB_USER: ${DB_USER}
+  DB_PASSWORD: ${DB_PASSWORD}
+  QUEUE_URI: ${QUEUE_URI}
+
+x-database-environment: &databaseEnvironment
+  MYSQL_DATABASE: ${DB_DATABASE}
+  MYSQL_USER: ${DB_USER}
+  MYSQL_PASSWORD: ${DB_PASSWORD}
+  MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+  SERVICE_TAGS: dev
+  SERVICE_NAME: mysql
+
+x-rabbitmq-environment: &rabbitmqEnvironment
+  RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+  RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+  RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST}
+
+networks:
+  nestjs:
+
+volumes:
+  db_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  rabbitmq_logs:
+    driver: local
+
+services:
+  mysql:
+    image: mysql:latest
+    restart: unless-stopped
+    tty: true
+    ports:
+      - '3307:3306'
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    environment:
+      <<: [*databaseEnvironment]
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - nestjs
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - 5672:5672
+      - 15672:15672
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    environment:
+      <<: [*rabbitmqEnvironment]
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/
+      - rabbitmq_logs:/var/log/rabbitmq
+    networks:
+      - nestjs
+
+  api-gateway:
+    build:
+      context: ./dockerfiles
+      dockerfile: api-gateway.dockerfile
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app:delegated
+    networks:
+      - nestjs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      <<: [*appEnvironment]
+
+  # products:
+  #   build:
+  #     context: ./dockerfiles
+  #     dockerfile: products.dockerfile
+  #   # ports:
+  #   #   - '3000:3000'
+  #   volumes:
+  #     - .:/app:delegated
+  #   networks:
+  #     - nestjs
+  #   depends_on:
+  #     mysql:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   environment:
+  #     <<: [*appEnvironment]
+
+  # inventory:
+  #   build:
+  #     context: ./dockerfiles
+  #     dockerfile: inventory.dockerfile
+  #   # ports:
+  #   #   - '3000:3000'
+  #   volumes:
+  #     - .:/app:delegated
+  #   networks:
+  #     - nestjs
+  #   depends_on:
+  #     mysql:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   environment:
+  #     <<: [*appEnvironment]
