@@ -92,8 +92,6 @@ services:
     build:
       context: .
       dockerfile: products.dockerfile
-    # ports:
-    #   - '3000:3000'
     volumes:
       - ./src:/app:delegated
     networks:
@@ -110,8 +108,6 @@ services:
     build:
       context: .
       dockerfile: inventory.dockerfile
-    # ports:
-    #   - '3000:3000'
     volumes:
       - ./src:/app:delegated
     networks:
@@ -123,3 +119,12 @@ services:
         condition: service_healthy
     environment:
       <<: [*appEnvironment]
+  k6:
+    image: grafana/k6:latest
+    networks:
+      - nestjs
+    ports:
+      - "6565:6565"
+    working_dir: /app
+    volumes:
+      - ./k6:/app
