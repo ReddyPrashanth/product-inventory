@@ -16,6 +16,6 @@ export const options = {
 //
 export default function () {
   const res = http.get("http://api-gateway:3000/api/products");
-  check(res, { "status wa 200": (r) => r.status == 200 });
+  check(res, { "status was 200": (r) => r.status == 200 });
   sleep(1);
 }
